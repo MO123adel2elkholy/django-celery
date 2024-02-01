@@ -19,9 +19,11 @@ class SignUpView(generic.FormView):
     template_name = "users/sign_up.html"
     form_class = UserForm
     success_url = "/account/"
+    print('in signup view => ', )
 
     def form_valid(self, form):
         obj = form.save()
+        print('user object => ', obj)
         login(self.request, obj)
         # this is a celery task
         create_email.delay(
@@ -50,9 +52,18 @@ class SignInView(generic.FormView):
     def form_valid(self, form):
         username = form.cleaned_data['username']
         password = form.cleaned_data['password']
-        user = authenticate(username=username, password=password)
-        if user is not None and user.is_active:
-            login(self.request, user)
+        obj = authenticate(username=username, password=password)
+        if obj is not None and obj.is_active:
+            login(self.request, obj)
+            create_email.delay(
+                user_id=obj.id,  # user ID - this must be added
+                email_account="do not reply",  # the email account being used
+                subject='Thanks for signing up',
+                email=obj.username,  # who to email
+                cc=[],
+                template="hello.html",  # template to be used
+            )
+            print(' an email sented ')
             return super(SignInView, self).form_valid(form)
         else:
             return self.form_invalid(form)

@@ -7,7 +7,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 app = Celery('core')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-app.conf.timezone = 'Europe/London'
+app.conf.timezone = 'UTC'
 
 app.conf.beat_schedule = {
     "every_thirty_seconds": {
